@@ -1,0 +1,7 @@
+plotly
+chart-studio
+matplotlib
+scipy
+numpy
+Pillow
+numpy-stl
