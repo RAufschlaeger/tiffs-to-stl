@@ -1,7 +1,6 @@
 from PIL import Image
-import numpy
 import matplotlib.pyplot as plt
-
+import os
 
 class Vertex:
     def __init__(self, x: int, y: int, z: int):
@@ -82,5 +81,14 @@ plt.show()
 # size = img.shape[0]  # 227
 
 # load images: list
+img_dir = "slices"
+images = []  # list of strings
+for file in os.listdir(img_dir):
+    if file.endswith("tif"):
+        images.append(file)
+
+images.sort()
+# print(images)
+
 # triangulation = triangulate(images)
 # create STL file from triangulation
