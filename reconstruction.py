@@ -6,9 +6,11 @@ from stl import mesh
 from mpl_toolkits import mplot3d
 
 
-def triangles(img) -> list:
+def triangles(img: str, level: int, orientation: str) -> list:
     """
     :param img: name of a black and white image in the slices folder
+    :param level: level of the sliced image
+    :param orientation: one of six directions
     :return: facets: triangulation of img
     """
     im = Image.open('slices/'+img)
@@ -17,10 +19,23 @@ def triangles(img) -> list:
     for i in range(0, 227):
         for j in range(0, 227):
             if img[i][j] == 0:  # if pixel is black
-                # traverse clock-wise; 0 = basement level
-                facets.append([[i + 1, j + 1, 0], [i + 1, j, 0], [i, j, 0]])  # upper triangle of pixel
-                facets.append([[i, j + 1, 0], [i + 1, j + 1, 0], [i, j, 0]])  # lower triangle
-    facets = np.array(facets)
+                if orientation == 'z-':  # from below
+                    # traverse clock-wise
+                    facets.append([[i + 1, j + 1, level], [i + 1, j, level], [i, j, level]])  # upper triangle of pixel
+                    facets.append([[i, j + 1, level], [i + 1, j + 1, level], [i, j, level]])  # lower triangle
+                elif orientation == 'z+':  # from above
+                    facets.append([[i, j, level], [i + 1, j, level], [i + 1, j + 1, level]])
+                    facets.append([[i, j, level], [i + 1, j + 1, level], [i, j + 1, level]])
+                elif orientation == 'x-':  # from here
+                    break
+                elif orientation == 'x+':  # from there
+                    break
+                elif orientation == 'y-':  # from left
+                    break
+                elif orientation == 'y+':  # from right
+                    break
+                else:
+                    break
     return facets
 
 
@@ -29,17 +44,15 @@ def get_bottom(images: list) -> list:
     :param images: a (ordered) list of images
     :return: facets of first image in images
     """
-    return triangles(images[0])
+    return triangles(images[0], 0, 'z-')
 
 
 def get_roof(images: list) -> list:
     """
     :param images: A (ordered) list of images
-    :return: Triangulation of last image in images
+    :return: triangulation of last image in images
     """
-    # ToDo: add vertices of triangle clock-wise to have correct orientation of contour
-    n = len(images)
-    return triangles(images[n - 1])
+    return triangles(images[len(images) - 1], len(images) - 1, 'z+')
 
 
 def x_scan(img1, img2) -> list:
@@ -61,11 +74,11 @@ def merge(img1, img2) -> list:
 
 def triangulate(images: list) -> list:
     """
-    :param images: A (ordered) list of images
-    :return: triangulation: Triangulation of images as list of Facet objects
+    :param images: a (ordered) list of images
+    :return: triangulation: triangulation of images as list of facets
     """
     n = len(images)
-    triangulation = [get_bottom(images), get_roof(images)]  # unordered list of Facets
+    triangulation = [get_bottom(images), get_roof(images)]  # unordered list of facets
     for level in range(0, n-2):
         triangulation.append(merge(images[level], images[level + 1]))
     return triangulation
@@ -81,7 +94,10 @@ images.sort()
 
 # create stl file:
 
-facets = get_bottom(images)
+roof_facets = get_roof(images)
+bottom_facets = get_bottom(images)
+facets = bottom_facets + roof_facets
+facets = np.array(facets)
 
 # ToDo:
 #  1. merge first and second level: facets = merge(images[0],images[1])
