@@ -4,7 +4,6 @@ import os
 import numpy as np
 from stl import mesh
 from mpl_toolkits import mplot3d
-from matplotlib import pyplot
 
 
 def triangles(img) -> list:
@@ -64,9 +63,9 @@ def triangulate(images: list) -> list:
 
 
 # TEST:
-im = Image.open('slices/sphere_02.tif')
-plt.imshow(im, cmap='gray')
-plt.show()
+# im = Image.open('slices/sphere_02.tif')
+# plt.imshow(im, cmap='gray')
+# plt.show()
 # img = numpy.array(im)
 # size = img.shape[0]  # 227
 
@@ -124,16 +123,26 @@ cube.save('cube.stl')
 # Plot:
 
 # create a new plot
-figure = pyplot.figure()
+figure = plt.figure()
 axes = mplot3d.Axes3D(figure)
 
 # load the STL files and add the vectors to the plot
 your_mesh = mesh.Mesh.from_file('cube.stl')
-axes.add_collection3d(mplot3d.art3d.Poly3DCollection(your_mesh.vectors))
+edge_color = (50 / 255, 50 / 255, 50 / 255)
+collection = mplot3d.art3d.Poly3DCollection(your_mesh.vectors)
+collection.set_edgecolor(edge_color)
+axes.add_collection3d(collection)
 
 # auto scale to the mesh size
 scale = your_mesh.points.flatten()
 axes.auto_scale_xyz(scale, scale, scale)
 
-# show the plot to the screen
-pyplot.show()
+# if we want to change the angle ...
+# axes.view_init(40, 270)
+
+# plot to screen
+plt.show()
+
+for i in range(0, 360, 30):
+    axes.view_init(elev=30, azim=i)
+    figure.savefig("plot/plot%d.png" % i)
