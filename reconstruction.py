@@ -1,20 +1,10 @@
 from PIL import Image
 import matplotlib.pyplot as plt
 import os
-
-class Vertex:
-    def __init__(self, x: int, y: int, z: int):
-        self.x = x
-        self.y = y
-        self.z = z
-
-
-class Facet:
-    def __init__(self, normal: Vertex, p1: Vertex, p2: Vertex, p3: Vertex):
-        self.normal = normal
-        self.p1 = p1
-        self.p2 = p2
-        self.p3 = p3
+import numpy as np
+from stl import mesh
+from mpl_toolkits import mplot3d
+from matplotlib import pyplot
 
 
 def triangles(img) -> list:
@@ -91,4 +81,59 @@ images.sort()
 # print(images)
 
 # triangulation = triangulate(images)
-# create STL file from triangulation
+# should result in this format:
+
+# define the 8 vertices of the cube
+vertices = np.array([\
+    [-1, -1, -1],
+    [+1, -1, -1],
+    [+1, +1, -1],
+    [-1, +1, -1],
+    [-1, -1, +1],
+    [+1, -1, +1],
+    [+1, +1, +1],
+    [-1, +1, +1]])
+
+
+# define the 12 triangles composing the cube
+faces = np.array([\
+    [0,3,1],
+    [1,3,2],
+    [0,4,7],
+    [0,7,3],
+    [4,5,6],
+    [4,6,7],
+    [5,1,2],
+    [5,2,6],
+    [2,3,6],
+    [3,7,6],
+    [0,1,5],
+    [0,5,4]])
+
+# create STL file from triangulation:
+
+# create the mesh
+cube = mesh.Mesh(np.zeros(faces.shape[0], dtype=mesh.Mesh.dtype))
+for i, f in enumerate(faces):
+    for j in range(3):
+        cube.vectors[i][j] = vertices[f[j],:]
+
+# write the mesh to file "cube.stl"
+cube.save('cube.stl')
+
+# Plot:
+
+# create a new plot
+figure = pyplot.figure()
+axes = mplot3d.Axes3D(figure)
+
+# load the STL files and add the vectors to the plot
+your_mesh = mesh.Mesh.from_file('cube.stl')
+axes.add_collection3d(mplot3d.art3d.Poly3DCollection(your_mesh.vectors))
+
+# auto scale to the mesh size
+scale = your_mesh.points.flatten()
+axes.auto_scale_xyz(scale, scale, scale)
+
+# show the plot to the screen
+pyplot.show()
