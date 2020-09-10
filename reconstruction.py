@@ -59,19 +59,63 @@ def get_roof(images: list) -> list:
     return triangles(images[len(images) - 1], len(images), 'z+')
 
 
-def x_scan(img1, img2) -> list:
-    return []
-
-
-def y_scan(img1, img2) -> list:
-    return []
-
-
-def z_scan(L: str, U: str, level: int) -> list:
+def horizontal_facets(layer: np.array, i: int, j: int, level: int, orientation: str, bottom=False, roof=False) -> list:
     """
-    :param L: title of lower image
-    :param U: title of upper image
-    :return: z-direction facets resulting from two slice layers
+    :param roof: true, if layer is roof
+    :param bottom: true, if layer is bottom
+    :param orientation: orientation of layer
+    :param level: level of layer
+    :param j: y-coordinate of pixel
+    :param i: x-coordinate of pixel
+    :param layer: image as np.array from whom we retain the horizontal facets
+    :return facets: horizontal facets
+    """
+
+    # determine for each edge
+    facets = []
+
+    # x direction
+    if layer[i + 1][j] != 0:
+        if orientation == 'z-':
+            facets.append([[i+1, j + 1, level + 1], [i+1, j, level + 1], [i+1, j, level]])
+            facets.append([[i+1, j + 1, level], [i+1, j+1, level + 1], [i+1, j, level]])
+        if orientation == 'z+':
+            facets.append([[i+1, j + 1, level - 1], [i+1, j, level - 1], [i+1, j, level]])
+            facets.append([[i+1, j + 1, level], [i+1, j + 1, level - 1], [i+1, j, level]])
+    if layer[i - 1][j] != 0:
+        if orientation == 'z-':
+            facets.append([[i, j, level], [i, j, level + 1], [i, j + 1, level + 1]])
+            facets.append([[i, j, level], [i, j + 1, level + 1], [i, j + 1, level]])
+        if orientation == 'z+':
+            facets.append([[i, j, level], [i, j, level - 1], [i, j + 1, level - 1]])
+            facets.append([[i, j, level], [i, j + 1, level - 1], [i, j + 1, level]])
+
+    # y direction
+    if layer[i][j + 1] != 0:
+        if orientation == 'z-':
+            facets.append([[i, j+1, level], [i, j+1, level + 1], [i+1, j+1, level + 1]])
+            facets.append([[i, j+1, level], [i+1, j+1, level + 1], [i+1, j+1, level]])
+        if orientation == 'z+':
+            facets.append([[i, j+1, level], [i, j+1, level - 1], [i+1, j+1, level - 1]])
+            facets.append([[i, j+1, level], [i+1, j+1, level - 1], [i+1, j+1, level]])
+
+    if layer[i][j - 1] != 0:
+        if orientation == 'z-':
+            facets.append([[i+1, j, level + 1], [i, j, level + 1], [i, j, level]])
+            facets.append([[i+1, j, level], [i+1, j, level + 1], [i, j, level]])
+        if orientation == 'z+':
+            facets.append([[i+1, j, level - 1], [i, j, level - 1], [i, j, level]])
+            facets.append([[i+1, j, level], [i+1, j, level - 1], [i, j, level]])
+
+    return facets
+
+
+def merge(img1: str, img2: str, level: int) -> list:
+    """
+    :param img1: title of lower image
+    :param img2: title of upper image
+    :param level: level of layer
+    :return facets: facets resulting from two slice layers
     """
 
     # create images for upper and lower contour in intermediate layer
@@ -81,10 +125,8 @@ def z_scan(L: str, U: str, level: int) -> list:
     bottom = np.array(bottom)
 
     # load slices
-    L = Image.open('slices/'+L)
-    L = np.array(L)
-    U = Image.open('slices/' + U)
-    U = np.array(U)
+    L = np.array(Image.open('slices/' + img1))
+    U = np.array(Image.open('slices/' + img2))
 
     for i in range(0, IMAGE_SIZE):
         for j in range(0, IMAGE_SIZE):
@@ -93,18 +135,16 @@ def z_scan(L: str, U: str, level: int) -> list:
             if U[i][j] == 0 and L[i][j] == 255:
                 bottom[i][j] = 0
 
-    return triangles(roof, level, 'z+') + triangles(bottom, level, 'z-')
+    # add horizontal facets
+    facets = []
+    for i in range(0, IMAGE_SIZE):
+        for j in range(0, IMAGE_SIZE):
+            if roof[i][j] == 0:
+                facets += horizontal_facets(roof, i, j, level, 'z+')
+            if bottom[i][j] == 0:
+                facets += horizontal_facets(bottom, i, j, level, 'z-')
 
-
-def merge(img1: str, img2: str, level: int) -> list:
-    """
-    :param img1: title of lower image
-    :param img2: title of upper image
-    :return facets: facets resulting from two slice layers
-    """
-    # ToDo: implement x and y scan procedure in merging process
-    facets = x_scan(img1, img2) + y_scan(img1, img2) + z_scan(img1, img2, level)
-    return facets
+    return facets + triangles(roof, level, 'z+') + triangles(bottom, level, 'z-')
 
 
 def triangulate(images: list) -> list:
@@ -114,14 +154,19 @@ def triangulate(images: list) -> list:
     """
 
     facets = []
-    for level in range(0, len(images) - 1):
+    for level in range(0, 2):  # len(images) - 1
         level_facets = merge(images[level], images[level + 1], level + 1)
         facets += level_facets
+
+    bottom = np.array(Image.open('slices/' + images[0]))
+    roof = np.array(Image.open('slices/' + images[len(images)-1]))
+
+    # ToDo: add special horizontal facets for bottom and roof
 
     roof_facets = get_roof(images)
     bottom_facets = get_bottom(images)
 
-    facets = bottom_facets + facets + roof_facets
+    facets = facets + bottom_facets + roof_facets
     facets = np.array(facets)
     return facets
 
@@ -146,10 +191,10 @@ level = mesh.Mesh(np.zeros(facets.shape[0], dtype=mesh.Mesh.dtype))
 level.vectors = facets
 
 # scale layer height
-level.vectors[:,:, 2] *= 4  # ToDo: check, if 4 is correct!
+level.vectors[:, :, 2] *= 4  # ToDo: check, if 4 is correct!
 
-# write the mesh to file "level.stl"
-level.save('level.stl')
+# write the mesh to file "sphere.stl"
+level.save('sphere.stl')
 
 # plot:
 
@@ -157,7 +202,7 @@ figure = plt.figure()
 axes = mplot3d.Axes3D(figure)
 
 # load the stl files and add the vectors to the plot
-your_mesh = mesh.Mesh.from_file('level.stl')
+your_mesh = mesh.Mesh.from_file('sphere.stl')
 edge_color = (0 / 255, 0 / 255, 255 / 255)  # blue
 collection = mplot3d.art3d.Poly3DCollection(your_mesh.vectors)
 collection.set_edgecolor(edge_color)
