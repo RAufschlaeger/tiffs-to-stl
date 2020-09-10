@@ -56,7 +56,7 @@ def get_roof(images: list) -> list:
     :param images: A (ordered) list of images
     :return: triangulation of last image in images
     """
-    return triangles(images[len(images) - 1], len(images) - 1, 'z+')
+    return triangles(images[len(images) - 1], len(images), 'z+')
 
 
 def x_scan(img1, img2) -> list:
