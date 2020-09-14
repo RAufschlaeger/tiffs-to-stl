@@ -128,8 +128,8 @@ def merge(img1: str, img2: str, level: int) -> list:
     L = np.array(Image.open('slices/' + img1))
     U = np.array(Image.open('slices/' + img2))
 
-    for i in range(0, IMAGE_SIZE):
-        for j in range(0, IMAGE_SIZE):
+    for i in range(0, IMAGE_SIZE-1):
+        for j in range(0, IMAGE_SIZE-1):
             if L[i][j] == 0 and U[i][j] == 255:
                 roof[i][j] = 0
             if U[i][j] == 0 and L[i][j] == 255:
@@ -137,8 +137,8 @@ def merge(img1: str, img2: str, level: int) -> list:
 
     # add horizontal facets
     facets = []
-    for i in range(0, IMAGE_SIZE):
-        for j in range(0, IMAGE_SIZE):
+    for i in range(0, IMAGE_SIZE-1):
+        for j in range(0, IMAGE_SIZE-1):
             if roof[i][j] == 0:
                 facets += horizontal_facets(roof, i, j, level, 'z+')
             if bottom[i][j] == 0:
