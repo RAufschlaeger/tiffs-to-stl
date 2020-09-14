@@ -59,7 +59,7 @@ def get_roof(images: list) -> list:
     return triangles(images[len(images) - 1], len(images), 'z+')
 
 
-def horizontal_facets(layer: np.array, i: int, j: int, level: int, orientation: str, bottom=False, roof=False) -> list:
+def vertical_facets(layer: np.array, i: int, j: int, level: int, orientation: str, bottom=False, roof=False) -> list:
     """
     :param roof: true, if layer is roof
     :param bottom: true, if layer is bottom
@@ -67,8 +67,8 @@ def horizontal_facets(layer: np.array, i: int, j: int, level: int, orientation: 
     :param level: level of layer
     :param j: y-coordinate of pixel
     :param i: x-coordinate of pixel
-    :param layer: image as np.array from whom we retain the horizontal facets
-    :return facets: horizontal facets
+    :param layer: image as np.array from whom we retain the vertical facets
+    :return facets: vertical facets
     """
 
     # determine for each edge
@@ -143,14 +143,14 @@ def merge(img1: str, img2: str, level: int) -> list:
             if U[i][j] == 0 and L[i][j] == 255:
                 bottom[i][j] = 0
 
-    # add horizontal facets
+    # add vertical facets
     facets = []
     for i in range(0, IMAGE_SIZE-1):
         for j in range(0, IMAGE_SIZE-1):
             if roof[i][j] == 0:
-                facets += horizontal_facets(roof, i, j, level, 'z+')
+                facets += vertical_facets(roof, i, j, level, 'z+')
             if bottom[i][j] == 0:
-                facets += horizontal_facets(bottom, i, j, level, 'z-')
+                facets += vertical_facets(bottom, i, j, level, 'z-')
 
     return facets + triangles(roof, level, 'z+') + triangles(bottom, level, 'z-')
 
@@ -169,7 +169,7 @@ def triangulate(images: list) -> list:
     bottom = np.array(Image.open('slices/' + images[0]))
     roof = np.array(Image.open('slices/' + images[len(images)-1]))
 
-    # ToDo: add special horizontal facets for bottom and roof
+    # ToDo: add special vertical facets for bottom and roof
 
     roof_facets = get_roof(images)
     bottom_facets = get_bottom(images)
