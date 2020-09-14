@@ -77,35 +77,43 @@ def horizontal_facets(layer: np.array, i: int, j: int, level: int, orientation: 
     # x direction
     if layer[i + 1][j] != 0:
         if orientation == 'z-':
+            #print('a')
             facets.append([[i+1, j + 1, level + 1], [i+1, j, level + 1], [i+1, j, level]])
             facets.append([[i+1, j + 1, level], [i+1, j+1, level + 1], [i+1, j, level]])
         if orientation == 'z+':
-            facets.append([[i+1, j + 1, level - 1], [i+1, j, level - 1], [i+1, j, level]])
-            facets.append([[i+1, j + 1, level], [i+1, j + 1, level - 1], [i+1, j, level]])
+            #print('b')
+            facets.append([[i+1, j, level], [i+1, j, level - 1], [i+1, j + 1, level - 1]])
+            facets.append([[i+1, j, level], [i+1, j + 1, level - 1], [i+1, j + 1, level]])
     if layer[i - 1][j] != 0:
         if orientation == 'z-':
+            #print('c')
             facets.append([[i, j, level], [i, j, level + 1], [i, j + 1, level + 1]])
             facets.append([[i, j, level], [i, j + 1, level + 1], [i, j + 1, level]])
         if orientation == 'z+':
-            facets.append([[i, j, level], [i, j, level - 1], [i, j + 1, level - 1]])
-            facets.append([[i, j, level], [i, j + 1, level - 1], [i, j + 1, level]])
+            #print('d')
+            facets.append([[i, j + 1, level - 1], [i, j, level - 1], [i, j, level]])
+            facets.append([[i, j + 1, level], [i, j + 1, level - 1], [i, j, level]])
 
     # y direction
     if layer[i][j + 1] != 0:
         if orientation == 'z-':
+            #print('e')
             facets.append([[i, j+1, level], [i, j+1, level + 1], [i+1, j+1, level + 1]])
             facets.append([[i, j+1, level], [i+1, j+1, level + 1], [i+1, j+1, level]])
         if orientation == 'z+':
-            facets.append([[i, j+1, level], [i, j+1, level - 1], [i+1, j+1, level - 1]])
-            facets.append([[i, j+1, level], [i+1, j+1, level - 1], [i+1, j+1, level]])
+            #print('f')
+            facets.append([[i+1, j+1, level - 1], [i, j+1, level - 1], [i, j+1, level]])
+            facets.append([[i+1, j+1, level], [i+1, j+1, level - 1], [i, j+1, level]])
 
     if layer[i][j - 1] != 0:
         if orientation == 'z-':
+            #print('g')
             facets.append([[i+1, j, level + 1], [i, j, level + 1], [i, j, level]])
             facets.append([[i+1, j, level], [i+1, j, level + 1], [i, j, level]])
         if orientation == 'z+':
-            facets.append([[i+1, j, level - 1], [i, j, level - 1], [i, j, level]])
-            facets.append([[i+1, j, level], [i+1, j, level - 1], [i, j, level]])
+            #print('h')
+            facets.append([[i, j, level], [i, j, level - 1], [i+1, j, level - 1]])
+            facets.append([[i, j, level], [i+1, j, level - 1], [i+1, j, level]])
 
     return facets
 
