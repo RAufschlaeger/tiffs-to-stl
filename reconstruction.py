@@ -5,8 +5,9 @@ import numpy as np
 from stl import mesh
 from mpl_toolkits import mplot3d
 import math
+from tqdm import tqdm
 
-IMAGE_SIZE = 57  # 227
+IMAGE_SIZE = 589  # 57
 SLICES_DIR_Z = 'slices_z/'
 SLICES_DIR_X = 'slices_x/'
 SLICES_DIR_Y = 'slices_y/'
@@ -96,7 +97,7 @@ def triangulate_z(images: list, dir: str) -> list:
     """
 
     facets = []
-    for level in range(0, len(images) - 1):  # len(images) - 1
+    for level in tqdm(range(0, len(images) - 1)):  # len(images) - 1
         level_facets = merge(images[level], images[level + 1], level + 1, dir)
         facets += level_facets
     roof_facets = get_roof(images, dir)
@@ -154,13 +155,14 @@ level_3.rotate(axis=[0.5, 0, 0], theta=math.radians(270))
 level_3.vectors[:, :, 1] = - level_3.vectors[:, :, 1]
 level_3.vectors[:, [0, 1, 2], :] = level_3.vectors[:, [2, 1, 0], :]
 
-# scale layer height
-# level.vectors[:, :, 2] *= 4  # ToDo: check, if 4 is correct!
-
 # write the mesh to file "object.stl"
 level = mesh.Mesh(np.zeros(facets_z.shape[0] + facets_x.shape[0] + facets_y.shape[0], dtype=mesh.Mesh.dtype))
 one_and_two_vectors = np.append(level_1.vectors, level_2.vectors, axis=0)
 level.vectors = np.append(one_and_two_vectors, level_3.vectors, axis=0)
+
+# scale layer height
+level.vectors[:, :, 2] *= 4  # ToDo: check, if 4 is correct!
+
 level.save('object.stl')
 
 # plot:
